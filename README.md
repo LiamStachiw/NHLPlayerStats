@@ -1,2 +1,2 @@
 # NHLPlayerStats
-### All stats used in the application are provided by MoneyPuck.com
+### All stats used in this application are provided by MoneyPuck.com
