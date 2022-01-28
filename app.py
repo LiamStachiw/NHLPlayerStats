@@ -1,5 +1,6 @@
 #All players stats are provided by MoneyPuck.com
 
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -46,6 +47,7 @@ def calc_defensive_score (row):
 st.set_page_config(page_title='NHL Player Stats')
 st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats (Min. 200 Minutes Played)')
+st.caption('Last updated: 01/28/2022, 18:38:18')
 
 # LOAD DATA
 csv_file = 'skaters.csv'
