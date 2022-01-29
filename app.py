@@ -83,7 +83,7 @@ st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
 st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats (Min. 200 Minutes Played)')
-st.caption('Player stats last updated: 01/28/2022, 18:38:18 EST')
+st.caption('Player stats last updated: 2022-01-29 05:44 Eastern Time')
 
 # LOAD DATA
 csv_file = 'skaters.csv'
