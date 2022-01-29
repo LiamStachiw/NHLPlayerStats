@@ -7,11 +7,11 @@ import pandas as pd
 import streamlit as st
 
 # Stat weight values
-penalty_weight = 0.5
-takeaway_weight = 2
+penalty_weight = 1
+takeaway_weight = 1
 dZone_Start_weight = 1
-onIce_xgf_weight = 0.5
-blocked_weight = 5
+onIce_xgf_weight = 1
+blocked_weight = 1
 onIce_corsi_weight = 1
 
 # Normalize column
@@ -22,39 +22,39 @@ def normalize_column ():
 def calc_penalty_percent (row):
     
     # divide by 0 protection
-    if (row['penaltiesDrawn'] + row['penalties']) == 0:
+    if (row['penalties_drawn_normal'] + row['penalties_normal']) == 0:
         return 0.0
     
-    return row['penaltiesDrawn'] / (row['penaltiesDrawn'] + row['penalties'])
+    return row['penalties_drawn_normal'] / (row['penalties_drawn_normal'] + row['penalties_normal'])
 
 # Calculate a percentage of takeaways vs giveaways (defensive zone giveaways are weighed heavier)
 def calc_takeaway_percent (row):
     
     # divide by 0 protection
-    if (row['I_F_takeaways'] + row['I_F_takeaways'] + row['I_F_dZoneGiveaways']) == 0:
+    if (row['takeaways_normal'] + row['takeaways_normal'] + row['dZone_giveaways_normal']) == 0:
         return 0.0
     
-    return row['I_F_takeaways'] / (row['I_F_takeaways'] + row['I_F_giveaways'] + row['I_F_dZoneGiveaways'])
+    return row['takeaways_normal'] / (row['takeaways_normal'] + row['giveaways_normal'] + row['dZone_giveaways_normal'])
 
 # Calculate the percentage of starts the player gets in the defensive zone, indicating trust from the coach
 def calc_dZone_start_percent (row):
     
-    return row['I_F_dZoneShiftStarts'] / (row['I_F_dZoneShiftStarts'] + row['I_F_oZoneShiftStarts'] + row['I_F_neutralZoneShiftStarts'])
+    return row['dZone_starts_normal'] / (row['dZone_starts_normal'] + row['oZone_starts_normal'] + row['nZone_starts_normal'])
 
 # Calculate the expected goals for percentage when the player is on the ice
 def calc_onIce_xgf_percent (row):
     
-    return row['OnIce_F_xGoals'] / (row['OnIce_F_xGoals'] + row['OnIce_A_xGoals'])
+    return row['xGoals_F_normal'] / (row['xGoals_F_normal'] + row['xGoals_A_normal'])
 
 # Calculate the percentage of shot attempts blocked by the player
 def calc_blocked_percent (row):
     
-    return row['shotsBlockedByPlayer'] / (row['shotsBlockedByPlayer'] + row['OnIce_A_shotAttempts'])
+    return row['blocks_normal'] / (row['blocks_normal'] + row['shots_against_normal'])
 
 # Calculate an overall defensive score based on all the previous stats
 def calc_defensive_score (row):
     
-    return ((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['onIce_corsiPercentage'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight))
+    return ((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['onIce_corsiPercentage'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight) + row['hits_normal'])
 
 # Set page title and headers
 st.set_page_config(page_title='NHL Player Stats',
@@ -101,6 +101,10 @@ df['oZone_starts_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_oZoneS
 df['nZone_starts_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_neutralZoneShiftStarts']).reshape(-1,1))
 df['blocks_normal'] = MinMaxScaler().fit_transform(np.array(df['shotsBlockedByPlayer']).reshape(-1,1))
 df['shots_against_normal'] = MinMaxScaler().fit_transform(np.array(df['OnIce_A_shotAttempts']).reshape(-1,1))
+df['xGoals_A_normal'] = MinMaxScaler().fit_transform(np.array(df['OnIce_A_xGoals']).reshape(-1,1))
+df['xGoals_F_normal'] = MinMaxScaler().fit_transform(np.array(df['OnIce_F_xGoals']).reshape(-1,1))
+df['hits_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_hits']).reshape(-1,1))
+
 
 
 
@@ -134,7 +138,7 @@ st.dataframe(df)
 
 st.caption('Defensive score is calculated by using a combination of the player\'s on ice expected goals for %, shot attempts blocked %, on ice corsi %, % of penalties taken vs. drawn, % of takeaways vs. giveaways, and their defensive zone start %. These stats are entirely made up and just for fun. Please don\'t take anything on the page seriously. All stats are provided by MoneyPuck.com')
 
-df_normalized = df.copy()
-df_normalized['Takeaways Normalized'] = MinMaxScaler().fit_transform(np.array(df_normalized['Takeaways']).reshape(-1,1))
+# df_normalized = df.copy()
+# df_normalized['Takeaways Normalized'] = MinMaxScaler().fit_transform(np.array(df_normalized['Takeaways']).reshape(-1,1))
 
-st.dataframe(df_normalized)
+# st.dataframe(df_normalized)
