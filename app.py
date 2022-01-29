@@ -44,7 +44,8 @@ def calc_defensive_score (row):
     return (row['onIce_xgf_Percentage'] + row['shotBlockedPercentage'] + row['onIce_corsiPercentage'] + row['penaltiesPercentage'] + row['takeawayPercentage'] + row['dZone_Start_Percentage'])
 
 # Set page title and headers
-st.set_page_config(page_title='NHL Player Stats')
+st.set_page_config(page_title='NHL Player Stats',
+                   page_icon=":ice_hockey:")
 st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats (Min. 200 Minutes Played)')
 st.caption('Last updated: 01/28/2022, 18:38:18 EST')
