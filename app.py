@@ -82,7 +82,7 @@ def calc_defensive_score (row):
 st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
 st.header('Top NHL Players by Advanced Stats')
-st.subheader('Defensive Skater Stats (Min. 200 Minutes Played)')
+st.subheader('Defensive Skater Stats (Min. 300 Minutes Played)')
 st.caption('Player stats last updated: 2022-04-14 06:06 Eastern Time.')
 
 # LOAD DATA
@@ -97,8 +97,8 @@ index_names = df[df['situation'] != 'all'].index
 df.drop(index_names,
         inplace=True)
 
-# Only use players that have played a minimum 200 minutes this season
-index_names = df[df['icetime'] < 12000].index
+# Only use players that have played a minimum 300 minutes this season
+index_names = df[df['icetime'] < 18000].index
 df.drop(index_names,
         inplace=True)
 
