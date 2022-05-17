@@ -13,11 +13,11 @@ import os
 # Stat weight values
 penalty_weight = 1
 takeaway_weight = 1
-dZone_Start_weight = 1
+dZone_Start_weight = 0.5
 onIce_xgf_weight = 1
 blocked_weight = 1
 onIce_corsi_weight = 1
-hits_weight = 0.25
+hits_weight = 1
 faceoffs_weight = 1
 
 # Normalize column
@@ -28,59 +28,67 @@ def normalize_column ():
 def calc_faceoff_percent (row):
     
     # divide by 0 protection
-    if(row['faceoffsWon_normal'] + row['faceoffsLost_normal']) == 0:
+    if(row['faceoffsWon'] + row['faceoffsLost']) == 0:
         return 0.0
     
-    return row['faceoffsWon_normal'] / (row['faceoffsWon_normal'] + row['faceoffsLost_normal'])
+    return row['faceoffsWon'] / (row['faceoffsWon'] + row['faceoffsLost'])
 
 # Calculate a percentage of penalties taken vs penalties drawn
 def calc_penalty_percent (row):
     
     # divide by 0 protection
-    if (row['penalties_drawn_normal'] + row['penalties_normal']) == 0:
+    if (row['penaltiesDrawn'] + row['penalties']) == 0:
         return 0.0
     
-    return row['penalties_drawn_normal'] / (row['penalties_drawn_normal'] + row['penalties_normal'])
+    return row['penaltiesDrawn'] / (row['penaltiesDrawn'] + row['penalties'])
 
 # Calculate a percentage of takeaways vs giveaways (defensive zone giveaways are weighed heavier)
 def calc_takeaway_percent (row):
     
     # divide by 0 protection
-    if (row['takeaways_normal'] + row['takeaways_normal'] + row['dZone_giveaways_normal']) == 0:
+    if (row['I_F_takeaways'] + row['I_F_takeaways'] + row['I_F_dZoneGiveaways']) == 0:
         return 0.0
     
-    return row['takeaways_normal'] / (row['takeaways_normal'] + row['giveaways_normal'] + row['dZone_giveaways_normal'])
+    return row['I_F_takeaways'] / (row['I_F_takeaways'] + row['I_F_giveaways'] + row['I_F_dZoneGiveaways'])
 
 # Calculate the percentage of starts the player gets in the defensive zone, indicating trust from the coach
 def calc_dZone_start_percent (row):
     
-    return row['dZone_starts_normal'] / (row['dZone_starts_normal'] + row['oZone_starts_normal'] + row['nZone_starts_normal'])
+    return row['I_F_dZoneShiftStarts'] / (row['I_F_dZoneShiftStarts'] + row['I_F_oZoneShiftStarts'] + row['I_F_neutralZoneShiftStarts'])
 
 # Calculate the expected goals for percentage when the player is on the ice
 def calc_onIce_xgf_percent (row):
     
-    return row['xGoals_F_normal'] / (row['xGoals_F_normal'] + row['xGoals_A_normal'])
+    return row['OnIce_F_xGoals'] / (row['OnIce_F_xGoals'] + row['OnIce_A_xGoals'])
 
 # Calculate the percentage of shot attempts blocked by the player
 def calc_blocked_percent (row):
     
     # Skewed data protection
-    if row['shots_against_normal'] == 0:
-        row['shots_against_normal'] = 0.01
+    if row['OnIce_A_shotAttempts'] == 0:
+        row['OnIce_A_shotAttempts'] = 0.01
     
-    return row['blocks_normal'] / (row['blocks_normal'] + row['shots_against_normal'])
+    return row['shotsBlockedByPlayer'] / (row['shotsBlockedByPlayer'] + row['OnIce_A_shotAttempts'])
+
+# Calculate the percentage of hits as a factor of total ice time
+def calc_hit_percent (row):
+    return row['I_F_hits'] / row['icetime']
 
 # Calculate an overall defensive score based on all the previous stats
 def calc_defensive_score (row):
     
-    if(row['faceoffsWon'] + row['faceoffsLost']) < 25:
+    if(faceoffs):
+        if(row['faceoffsWon'] + row['faceoffsLost']) < 25:
+            faceoff_factor = 0
+            stat_count = 7
+        else:
+            faceoff_factor = 1
+            stat_count = 8
+    else:
         faceoff_factor = 0
         stat_count = 7
-    else:
-        faceoff_factor = 1
-        stat_count = 8
     
-    return (((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['corsi_normal'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight) + (row['hits_normal'] * hits_weight) + ((row['faceoffPercentage'] * faceoffs_weight) * faceoff_factor)) / stat_count) * 10
+    return (((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['corsi_normal'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight) + (row['hitsPercentage'] * hits_weight) + ((row['faceoffPercentage'] * faceoffs_weight) * faceoff_factor)) / stat_count) * 10
 
 # Get an up-to-date version of the player stats
 def update_stats ():
@@ -110,6 +118,7 @@ st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats (Min. 300 Minutes Played)')
 st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv')).strftime("%Y-%m-%d, %H:%M") + " EST") 
 st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.)', on_click=update_stats)
+faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered.')
 
 # LOAD DATA
 csv_file = 'skaters.csv'
@@ -164,13 +173,14 @@ df['takeawayPercentage'] = df.apply(lambda row: calc_takeaway_percent(row), axis
 df['dZone_Start_Percentage'] = df.apply(lambda row: calc_dZone_start_percent(row), axis=1)
 df['onIce_xgf_Percentage'] = df.apply(lambda row: calc_onIce_xgf_percent(row), axis=1)
 df['shotBlockedPercentage'] = df.apply(lambda row: calc_blocked_percent(row), axis=1)
+df['hitsPercentage'] = df.apply(lambda row: calc_hit_percent(row), axis=1)
 df['defensive_score'] = df.apply(lambda row: calc_defensive_score(row), axis=1)
 
 
 
 # Re-order and rename the columns in the dataframe
-df = df[['name','team','position', 'defensive_score','icetime','onIce_corsiPercentage','faceoffPercentage','faceoffsWon','faceoffsLost','penaltiesPercentage','penalties','penaltiesDrawn','takeawayPercentage','I_F_takeaways','I_F_giveaways','I_F_dZoneGiveaways','dZone_Start_Percentage','I_F_dZoneShiftStarts','I_F_oZoneShiftStarts','I_F_neutralZoneShiftStarts','onIce_xgf_Percentage','OnIce_F_xGoals','OnIce_A_xGoals','shotBlockedPercentage','OnIce_A_shotAttempts','shotsBlockedByPlayer', 'I_F_hits']]
-df.rename(columns={'name':'Name','team':'Team','position':'Position', 'defensive_score':'Defensive Score','icetime':'Time on Ice (Minutes)','onIce_xGoalsPercentage':'Expected Goals %','onIce_corsiPercentage':'On Ice Corsi %','faceoffPercentage':'Faceoff Percentage','faceoffsWon':'Faceoffs Won','faceoffsLost':'Faceoffs Lost','penaltiesPercentage':'Penalties %','penalties':'Penalties Taken','penaltiesDrawn':'Penalties Drawn','takeawayPercentage':'Takeaway %','I_F_takeaways':'Takeaways','I_F_giveaways':'Giveaways','I_F_dZoneGiveaways':'Defensive Zone Giveaways','dZone_Start_Percentage':'Defensive Zone Start %','I_F_dZoneShiftStarts':'Defensive Zone Starts','I_F_oZoneShiftStarts':'Offensive Zone Starts','I_F_neutralZoneShiftStarts':'Neutral Zone Starts','onIce_xgf_Percentage':'On Ice Expected Goals For %','OnIce_F_xGoals':'On Ice Expected Goals For','OnIce_A_xGoals':'On Ice Expected Goals Against','shotBlockedPercentage':'Shot Attempts Blocked %','OnIce_A_shotAttempts':'On Ice Shot Attempts Against','shotsBlockedByPlayer':'Shots Blocked','I_F_hits':'Hits'},
+df = df[['name','team','position', 'defensive_score','icetime','onIce_corsiPercentage','faceoffPercentage','faceoffsWon','faceoffsLost','penaltiesPercentage','penalties','penaltiesDrawn','takeawayPercentage','I_F_takeaways','I_F_giveaways','I_F_dZoneGiveaways','dZone_Start_Percentage','I_F_dZoneShiftStarts','I_F_oZoneShiftStarts','I_F_neutralZoneShiftStarts','onIce_xgf_Percentage','OnIce_F_xGoals','OnIce_A_xGoals','shotBlockedPercentage','OnIce_A_shotAttempts','shotsBlockedByPlayer','hitsPercentage', 'I_F_hits']]
+df.rename(columns={'name':'Name','team':'Team','position':'Position', 'defensive_score':'Defensive Score','icetime':'Time on Ice (Minutes)','onIce_xGoalsPercentage':'Expected Goals %','onIce_corsiPercentage':'On Ice Corsi %','faceoffPercentage':'Faceoff Percentage','faceoffsWon':'Faceoffs Won','faceoffsLost':'Faceoffs Lost','penaltiesPercentage':'Penalties %','penalties':'Penalties Taken','penaltiesDrawn':'Penalties Drawn','takeawayPercentage':'Takeaway %','I_F_takeaways':'Takeaways','I_F_giveaways':'Giveaways','I_F_dZoneGiveaways':'Defensive Zone Giveaways','dZone_Start_Percentage':'Defensive Zone Start %','I_F_dZoneShiftStarts':'Defensive Zone Starts','I_F_oZoneShiftStarts':'Offensive Zone Starts','I_F_neutralZoneShiftStarts':'Neutral Zone Starts','onIce_xgf_Percentage':'On Ice Expected Goals For %','OnIce_F_xGoals':'On Ice Expected Goals For','OnIce_A_xGoals':'On Ice Expected Goals Against','shotBlockedPercentage':'Shot Attempts Blocked %','OnIce_A_shotAttempts':'On Ice Shot Attempts Against','shotsBlockedByPlayer':'Shots Blocked','hitsPercentage':'Hits Percentage','I_F_hits':'Hits'},
           inplace=True)
 
 # Sort the dataframe by defensive score
