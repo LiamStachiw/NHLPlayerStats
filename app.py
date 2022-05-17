@@ -2,9 +2,13 @@
 
 from datetime import datetime
 from sklearn.preprocessing import MinMaxScaler
+from urllib.request import Request, urlopen
 import numpy as np
 import pandas as pd
 import streamlit as st
+import datetime
+import pytz
+import os
 
 # Stat weight values
 penalty_weight = 1
@@ -78,12 +82,34 @@ def calc_defensive_score (row):
     
     return (((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['corsi_normal'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight) + (row['hits_normal'] * hits_weight) + ((row['faceoffPercentage'] * faceoffs_weight) * faceoff_factor)) / stat_count) * 10
 
+# Get an up-to-date version of the player stats
+def update_stats ():
+    
+    current_time = datetime.datetime.now(tz=pytz.timezone("EST"))
+    file_time = datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("EST")) if os.path.exists('skaters.csv') else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("EST"))
+    diff_hours = (current_time - file_time).total_seconds() / 3600.0
+    
+    if(diff_hours >= 24):
+        print('get new stats')
+        
+        if os.path.exists('skaters.csv'):
+            os.remove('skaters.csv')
+        else:
+            print("The file does not exist.")
+
+        req = Request('https://www.moneypuck.com/moneypuck/playerData/seasonSummary/2021/regular/skaters.csv',
+                      headers={'User-Agent': 'Mozilla/5.0'})
+        with urlopen(req) as response, open('skaters.csv', 'xb') as out_file:
+            data = response.read() # a `bytes` object
+            out_file.write(data)
+
 # Set page title and headers
 st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
 st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats (Min. 300 Minutes Played)')
-st.caption('Player stats last updated: 2022-04-14 06:06 Eastern Time.')
+st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv')).strftime("%Y-%m-%d, %H:%M") + " EST") 
+st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.)', on_click=update_stats)
 
 # LOAD DATA
 csv_file = 'skaters.csv'
