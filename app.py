@@ -1,7 +1,6 @@
 #All players stats are provided by MoneyPuck.com
 
 from datetime import datetime
-from sklearn.preprocessing import MinMaxScaler
 from urllib.request import Request, urlopen
 import numpy as np
 import pandas as pd
@@ -11,18 +10,14 @@ import pytz
 import os
 
 # Stat weight values
-penalty_weight = 0.5
+penalty_weight = 0.25
 takeaway_weight = 1
-dZone_Start_weight = 0.5
+dZone_Start_weight = 0.25
 onIce_xgf_weight = 1
 blocked_weight = 1
 onIce_corsi_weight = 1
 hits_weight = 0.25
 faceoffs_weight = 1
-
-# Normalize column
-def normalize_column ():
-    return 0
 
 # Calculate the player's faceoff percentage
 def calc_faceoff_percent (row):
@@ -92,7 +87,7 @@ def calc_defensive_score (row):
         faceoff_factor = 0
         stat_count = 7
     
-    return (((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['corsi_normal'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight) + (row['hitsPercentage'] * hits_weight) + ((row['faceoffPercentage'] * faceoffs_weight) * faceoff_factor)) / stat_count) * 10
+    return (((row['onIce_xgf_Percentage'] * onIce_xgf_weight) + (row['shotBlockedPercentage'] * blocked_weight) + (row['onIce_corsiPercentage'] * onIce_corsi_weight) + (row['penaltiesPercentage'] * penalty_weight) + (row['takeawayPercentage'] * takeaway_weight) + (row['dZone_Start_Percentage'] * dZone_Start_weight) + (row['hitsPercentage'] * hits_weight) + ((row['faceoffPercentage'] * faceoffs_weight) * faceoff_factor)) / stat_count) * 10
 
 # Get an up-to-date version of the player stats
 def update_stats ():
@@ -122,8 +117,8 @@ st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats')
 st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
 st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.)', on_click=update_stats)
-faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered.')
-minutes = st.slider('Minimum Icetime (minutes)', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
+faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered. This WILL add a noticable bias towards forwards playing the Center position.')
+minutes = st.slider('Minimum Icetime (minutes):', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
 
 # LOAD DATA
 csv_file = 'skaters.csv'
@@ -151,24 +146,6 @@ df['icetime'] = (df['icetime'] / 60).astype(int)
 
 # Convert necessary stats to integers for better readability
 df = df.astype({'faceoffsWon':int,'faceoffsLost':int,'penalties':int,'penaltiesDrawn':int,'I_F_hits':int,'I_F_takeaways':int,'I_F_giveaways':int,'I_F_dZoneGiveaways':int,'I_F_dZoneShiftStarts':int,'I_F_oZoneShiftStarts':int,'I_F_neutralZoneShiftStarts':int,'shotsBlockedByPlayer':int,'OnIce_A_shotAttempts':int} )
-
-# Create columns to normalize all the necessary data
-df['penalties_normal'] = MinMaxScaler().fit_transform(np.array(df['penalties']).reshape(-1,1))
-df['penalties_drawn_normal'] = MinMaxScaler().fit_transform(np.array(df['penaltiesDrawn']).reshape(-1,1))
-df['takeaways_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_takeaways']).reshape(-1,1))
-df['giveaways_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_giveaways']).reshape(-1,1))
-df['dZone_giveaways_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_dZoneGiveaways']).reshape(-1,1))
-df['dZone_starts_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_dZoneShiftStarts']).reshape(-1,1))
-df['oZone_starts_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_oZoneShiftStarts']).reshape(-1,1))
-df['nZone_starts_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_neutralZoneShiftStarts']).reshape(-1,1))
-df['blocks_normal'] = MinMaxScaler().fit_transform(np.array(df['shotsBlockedByPlayer']).reshape(-1,1))
-df['shots_against_normal'] = MinMaxScaler().fit_transform(np.array(df['OnIce_A_shotAttempts']).reshape(-1,1))
-df['xGoals_A_normal'] = MinMaxScaler().fit_transform(np.array(df['OnIce_A_xGoals']).reshape(-1,1))
-df['xGoals_F_normal'] = MinMaxScaler().fit_transform(np.array(df['OnIce_F_xGoals']).reshape(-1,1))
-df['hits_normal'] = MinMaxScaler().fit_transform(np.array(df['I_F_hits']).reshape(-1,1))
-df['corsi_normal'] = MinMaxScaler().fit_transform(np.array(df['onIce_corsiPercentage']).reshape(-1,1))
-df['faceoffsWon_normal'] = MinMaxScaler().fit_transform(np.array(df['faceoffsWon']).reshape(-1,1))
-df['faceoffsLost_normal'] = MinMaxScaler().fit_transform(np.array(df['faceoffsLost']).reshape(-1,1))
 
 
 # Calculate each necessary stat and add it to the dataframe
