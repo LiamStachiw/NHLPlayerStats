@@ -101,7 +101,7 @@ def update_stats ():
     file_time = datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")) if os.path.exists('skaters.csv') else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
     diff_hours = (current_time - file_time).total_seconds() / 3600.0
     
-    if(diff_hours >= 24):
+    if(diff_hours >= 24.0):
         print('get new stats')
         
         if os.path.exists('skaters.csv'):
