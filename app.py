@@ -118,6 +118,7 @@ st.subheader('Defensive Skater Stats')
 st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
 st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.)', on_click=update_stats)
 faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered. This WILL add a noticable bias towards forwards playing the Center position.')
+defense_only = st.checkbox('Only Show Defensemen?', help='Should only defensemen be represented on the chart?')
 minutes = st.slider('Minimum Icetime (minutes):', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
 
 # LOAD DATA
@@ -126,6 +127,12 @@ cols_to_use = ['name','team','position','situation','icetime','OnIce_F_xGoals','
 
 df = pd.read_csv(csv_file,
                  usecols=cols_to_use)
+
+# Only display defensemen if the option is selected
+if (defense_only):
+    index_names = df[df['position'] != 'D'].index
+    df.drop(index_names,
+        inplace=True)
 
 # Only use rows containing stats from all situations
 index_names = df[df['situation'] != 'all'].index
