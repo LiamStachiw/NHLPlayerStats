@@ -11,13 +11,13 @@ import pytz
 import os
 
 # Stat weight values
-penalty_weight = 1
+penalty_weight = 0.5
 takeaway_weight = 1
 dZone_Start_weight = 0.5
 onIce_xgf_weight = 1
 blocked_weight = 1
 onIce_corsi_weight = 1
-hits_weight = 1
+hits_weight = 0.25
 faceoffs_weight = 1
 
 # Normalize column
@@ -53,6 +53,10 @@ def calc_takeaway_percent (row):
 
 # Calculate the percentage of starts the player gets in the defensive zone, indicating trust from the coach
 def calc_dZone_start_percent (row):
+    
+    # divide by 0 protection 
+    if (row['I_F_dZoneShiftStarts'] + row['I_F_oZoneShiftStarts'] + row['I_F_neutralZoneShiftStarts']) == 0:
+        return 0.0
     
     return row['I_F_dZoneShiftStarts'] / (row['I_F_dZoneShiftStarts'] + row['I_F_oZoneShiftStarts'] + row['I_F_neutralZoneShiftStarts'])
 
@@ -115,10 +119,11 @@ def update_stats ():
 st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
 st.header('Top NHL Players by Advanced Stats')
-st.subheader('Defensive Skater Stats (Min. 300 Minutes Played)')
+st.subheader('Defensive Skater Stats')
 st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv')).strftime("%Y-%m-%d, %H:%M") + " EST") 
 st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.)', on_click=update_stats)
 faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered.')
+minutes = st.slider('Minimum Icetime (minutes)', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
 
 # LOAD DATA
 csv_file = 'skaters.csv'
@@ -133,7 +138,7 @@ df.drop(index_names,
         inplace=True)
 
 # Only use players that have played a minimum 300 minutes this season
-index_names = df[df['icetime'] < 18000].index
+index_names = df[df['icetime'] < (minutes * 60)].index
 df.drop(index_names,
         inplace=True)
 
@@ -196,4 +201,4 @@ df.index = np.arange(1,len(df)+1)
 #Display the dataframe on the webapp
 st.dataframe(df)
 
-st.caption('Defensive score is calculated by using a combination of the player\'s on ice expected goals for %, shot attempts blocked %, on ice corsi %, % of penalties taken vs. drawn, % of takeaways vs. giveaways, defensive zone start %, a small factor of total hits, and their faceoff percentage (if they\'ve taken more than 25 faceoffs on the season). The data is normalized before any calculations, which is why some of the percentages may not make sense. These stats are entirely made up and just for fun. Please don\'t take anything on the page seriously. All stats are provided by MoneyPuck.com')
+st.caption('Defensive score is calculated by using a combination of the player\'s on ice expected goals for %, shot attempts blocked %, on ice corsi %, % of penalties taken vs. drawn, % of takeaways vs. giveaways, defensive zone start %, a small factor of total hits, and their faceoff percentage (if they\'ve taken more than 25 faceoffs on the season). These stats are entirely made up and just for fun. Please don\'t take anything on the page seriously. All stats are provided by MoneyPuck.com')
