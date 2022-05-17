@@ -201,4 +201,4 @@ df.index = np.arange(1,len(df)+1)
 #Display the dataframe on the webapp
 st.dataframe(df)
 
-st.caption('Defensive score is calculated by using a combination of the player\'s on ice expected goals for %, shot attempts blocked %, on ice corsi %, % of penalties taken vs. drawn, % of takeaways vs. giveaways, defensive zone start %, a small factor of total hits, and their faceoff percentage (if they\'ve taken more than 25 faceoffs on the season). These stats are entirely made up and just for fun. Please don\'t take anything on the page seriously. All stats are provided by MoneyPuck.com')
+st.caption('Defensive score is calculated by using a combination of the player\'s on ice expected goals for %, shot attempts blocked %, on ice corsi %, % of penalties taken vs. drawn, % of takeaways vs. giveaways, defensive zone start %, a small factor of total hits as a factor of icetime, and their faceoff percentage (if they\'ve taken more than 25 faceoffs on the season). The defensive score stat entirely made up and just for fun. Please don\'t take anything on the page too seriously. All stats are provided by MoneyPuck.com')
