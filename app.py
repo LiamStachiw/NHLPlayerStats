@@ -97,8 +97,8 @@ def calc_defensive_score (row):
 # Get an up-to-date version of the player stats
 def update_stats ():
     
-    current_time = datetime.datetime.now(tz=pytz.timezone("EST"))
-    file_time = datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("EST")) if os.path.exists('skaters.csv') else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("EST"))
+    current_time = datetime.datetime.now(tz=pytz.timezone("UTC"))
+    file_time = datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")) if os.path.exists('skaters.csv') else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
     diff_hours = (current_time - file_time).total_seconds() / 3600.0
     
     if(diff_hours >= 24):
@@ -120,7 +120,7 @@ st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
 st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats')
-st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv')).strftime("%Y-%m-%d, %H:%M") + " EST") 
+st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
 st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.)', on_click=update_stats)
 faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered.')
 minutes = st.slider('Minimum Icetime (minutes)', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
