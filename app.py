@@ -109,17 +109,37 @@ def update_stats ():
             data = response.read() # a `bytes` object
             out_file.write(data)
 
-# Set page title and headers
+# Set page title, headers, and controls
 st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
+
 st.header('Top NHL Players by Advanced Stats')
+
 st.subheader('Defensive Skater Stats')
-season = st.selectbox('Season:', ('2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'), 0)
-st.caption('Season stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))), tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
-st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.) This button will be diabled upon completion of the regular season.', on_click=update_stats, disabled=True)
-faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered. This WILL add a noticable bias towards forwards playing the Center position.')
-defense_only = st.checkbox('Only Show Defensemen?', help='Should only defensemen be represented on the chart?')
-minutes = st.slider('Minimum Icetime (minutes):', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
+
+season = st.selectbox('Season:', 
+                      ('2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
+                      0,
+                      help='Select the season from which the player\'s stats should be displayed.')
+
+st.caption('Season stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))),
+            tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
+
+st.button('Update Stats', 
+          help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.) This button will be diabled upon completion of the regular season.',
+          on_click=update_stats, disabled=True)
+
+faceoffs = st.checkbox('Use Faceoff Percentage?',
+                       help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered. This WILL add a noticable bias towards forwards playing the Center position.')
+
+defense_only = st.checkbox('Only Show Defensemen?',
+                           help='Should only defensemen be represented on the chart?')
+
+minutes = st.slider('Minimum Icetime (minutes):',
+                    1,
+                    1000,
+                    300,
+                    help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
 
 # LOAD DATA
 csv_file = 'stats/{}.csv'.format(season.replace('/', ''))
