@@ -93,20 +93,19 @@ def calc_defensive_score (row):
 def update_stats ():
     
     current_time = datetime.datetime.now(tz=pytz.timezone("UTC"))
-    file_time = datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")) if os.path.exists('skaters.csv') else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
+    file_time = datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))), tz=pytz.timezone("UTC")) if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))) else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
     diff_hours = (current_time - file_time).total_seconds() / 3600.0
     
-    if(diff_hours >= 24.0):
-        print('get new stats')
+    if(diff_hours >= 0.0):
         
-        if os.path.exists('skaters.csv'):
-            os.remove('skaters.csv')
+        if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))):
+            os.remove('stats/{}.csv'.format(season.replace('/', '')))
         else:
             print("The file does not exist.")
-
-        req = Request('https://www.moneypuck.com/moneypuck/playerData/seasonSummary/2021/regular/skaters.csv',
+        
+        req = Request('https://www.moneypuck.com/moneypuck/playerData/seasonSummary/{}/regular/skaters.csv'.format(season[0:4]),
                       headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req) as response, open('skaters.csv', 'xb') as out_file:
+        with urlopen(req) as response, open('stats/{}.csv'.format(season.replace('/', '')), 'xb') as out_file:
             data = response.read() # a `bytes` object
             out_file.write(data)
 
@@ -115,14 +114,15 @@ st.set_page_config(page_title='NHL Player Stats',
                    page_icon="🏒")
 st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats')
-st.caption('Player stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('skaters.csv'), tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
-st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.) This button will be diabled upon completion of the regualar season.', on_click=update_stats, disabled=True)
+season = st.selectbox('Season:', ('2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'), 0)
+st.caption('Season stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))), tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
+st.button('Update Stats', help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.) This button will be diabled upon completion of the regular season.', on_click=update_stats, disabled=True)
 faceoffs = st.checkbox('Use Faceoff Percentage?', help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered. This WILL add a noticable bias towards forwards playing the Center position.')
 defense_only = st.checkbox('Only Show Defensemen?', help='Should only defensemen be represented on the chart?')
 minutes = st.slider('Minimum Icetime (minutes):', 1, 1000, 300, help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
 
 # LOAD DATA
-csv_file = 'skaters.csv'
+csv_file = 'stats/{}.csv'.format(season.replace('/', ''))
 cols_to_use = ['name','team','position','situation','icetime','OnIce_F_xGoals','OnIce_A_xGoals','OnIce_A_shotAttempts','onIce_corsiPercentage','penalties','penaltiesDrawn','I_F_hits','I_F_takeaways','I_F_giveaways','I_F_dZoneGiveaways','I_F_dZoneShiftStarts','I_F_oZoneShiftStarts','I_F_neutralZoneShiftStarts','shotsBlockedByPlayer', 'faceoffsWon', 'faceoffsLost']
 
 df = pd.read_csv(csv_file,
