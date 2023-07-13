@@ -118,7 +118,7 @@ st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats')
 
 season = st.selectbox('Season:', 
-                      ('2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
+                      ('2022/2023', '2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
                       0,
                       help='Select the season from which the player\'s stats should be displayed.')
 
