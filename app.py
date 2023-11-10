@@ -19,6 +19,9 @@ onIce_corsi_weight = 1
 hits_weight = 0.25
 faceoffs_weight = 1
 
+# Current season year
+current_season = '2023/2024'
+
 # Calculate the player's faceoff percentage
 def calc_faceoff_percent (row):
     
@@ -91,23 +94,18 @@ def calc_defensive_score (row):
 
 # Get an up-to-date version of the player stats
 def update_stats ():
-    
-    current_time = datetime.datetime.now(tz=pytz.timezone("UTC"))
-    file_time = datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))), tz=pytz.timezone("UTC")) if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))) else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
-    diff_hours = (current_time - file_time).total_seconds() / 3600.0
-    
-    if(diff_hours >= 0.0):
         
-        if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))):
-            os.remove('stats/{}.csv'.format(season.replace('/', '')))
-        else:
-            print("The file does not exist.")
-        
-        req = Request('https://www.moneypuck.com/moneypuck/playerData/seasonSummary/{}/regular/skaters.csv'.format(season[0:4]),
-                      headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req) as response, open('stats/{}.csv'.format(season.replace('/', '')), 'xb') as out_file:
-            data = response.read() # a `bytes` object
-            out_file.write(data)
+    if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))):
+        os.remove('stats/{}.csv'.format(season.replace('/', '')))
+    else:
+        print("The file does not exist.")
+    
+    req = Request('https://www.moneypuck.com/moneypuck/playerData/seasonSummary/{}/regular/skaters.csv'.format(season[0:4]),
+                    headers={'User-Agent': 'Mozilla/5.0'})
+    with urlopen(req) as response, open('stats/{}.csv'.format(season.replace('/', '')), 'xb') as out_file:
+        data = response.read() # a `bytes` object
+        out_file.write(data)
+
 
 # Set page title, headers, and controls
 st.set_page_config(page_title='NHL Player Stats',
@@ -118,16 +116,26 @@ st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats')
 
 season = st.selectbox('Season:', 
-                      ('2022/2023', '2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
+                      ('2023/2024', '2022/2023', '2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
                       0,
                       help='Select the season from which the player\'s stats should be displayed.')
 
 st.caption('Season stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))),
             tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
 
+# Used to determine if the "Update Stats" button should be disabled or not
+set_button_enable = True
+if(season == current_season):
+    current_time = datetime.datetime.now(tz=pytz.timezone("UTC"))
+    file_time = datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))), tz=pytz.timezone("UTC")) if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))) else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
+    diff_hours = (current_time - file_time).total_seconds() / 3600.0
+
+    if(diff_hours >= 1.0):
+        set_button_enable = False
+
 st.button('Update Stats', 
-          help='Get the most recent version of the player stats. (Stats will update only once every 24 hours.) This button will be diabled upon completion of the regular season.',
-          on_click=update_stats, disabled=True)
+          help='Get the most recent version of the player stats. Stats can only be updated once every 24 hours. This button is diabled for completed regular seasons.',
+          on_click=update_stats, disabled=set_button_enable)
 
 faceoffs = st.checkbox('Use Faceoff Percentage?',
                        help='Should faceoff percentage be used to calculate defensive score? Only players with at least 25 faceoffs taken will have their faceoff percentage considered. This WILL add a noticable bias towards forwards playing the Center position.')
@@ -139,7 +147,7 @@ minutes = st.slider('Minimum Icetime (minutes):',
                     1,
                     1000,
                     300,
-                    help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is.')
+                    help='Select the minimum ice time in minutes for a player to be represented on the chart. Please note that stats may become more misleading the lower the threshold is. The value will need to be reduced near the beginning of the season to display most players.')
 
 # LOAD DATA
 csv_file = 'stats/{}.csv'.format(season.replace('/', ''))
