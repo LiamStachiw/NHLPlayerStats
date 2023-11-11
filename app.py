@@ -128,7 +128,7 @@ set_button_enable = True
 if(season == current_season):
     current_time = datetime.datetime.now(tz=pytz.timezone("UTC"))
     file_time = datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))), tz=pytz.timezone("UTC")) if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))) else datetime.datetime(2022, 1, 1, 1, 1, tzinfo=pytz.timezone("UTC"))
-    diff_hours = (current_time - file_time).total_seconds() / 3600.0
+    diff_hours = (current_time - file_time).total_seconds() / 86400.0
 
     if(diff_hours >= 1.0):
         set_button_enable = False
