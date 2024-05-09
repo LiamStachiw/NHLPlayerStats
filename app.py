@@ -120,6 +120,9 @@ season = st.selectbox('Season:',
                       0,
                       help='Select the season from which the player\'s stats should be displayed.')
 
+if not os.path.exists('stats/{}.csv'.format(season.replace('/', ''))):
+    update_stats()
+
 st.caption('Season stats last updated: ' + datetime.datetime.fromtimestamp(os.path.getctime('stats/{}.csv'.format(season.replace('/', ''))),
             tz=pytz.timezone("UTC")).strftime("%Y-%m-%d, %H:%M") + " UTC") 
 
