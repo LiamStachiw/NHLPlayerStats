@@ -20,7 +20,7 @@ hits_weight = 0.25
 faceoffs_weight = 1
 
 # Current season year
-current_season = '2023/2024'
+current_season = 'N/A'
 
 # Calculate the player's faceoff percentage
 def calc_faceoff_percent (row):
