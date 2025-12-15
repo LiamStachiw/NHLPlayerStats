@@ -20,7 +20,7 @@ hits_weight = 0.25
 faceoffs_weight = 1
 
 # Current season year
-current_season = 'N/A'
+current_season = '2025/2026'
 
 # Calculate the player's faceoff percentage
 def calc_faceoff_percent (row):
@@ -98,7 +98,7 @@ def update_stats ():
     if os.path.exists('stats/{}.csv'.format(season.replace('/', ''))):
         os.remove('stats/{}.csv'.format(season.replace('/', '')))
     else:
-        print("The file does not exist.")
+        print("Stats file '{}.csv' does not exist. Fetching new file.".format(season.replace('/', '')))
     
     req = Request('https://www.moneypuck.com/moneypuck/playerData/seasonSummary/{}/regular/skaters.csv'.format(season[0:4]),
                     headers={'User-Agent': 'Mozilla/5.0'})
@@ -116,7 +116,7 @@ st.header('Top NHL Players by Advanced Stats')
 st.subheader('Defensive Skater Stats')
 
 season = st.selectbox('Season:', 
-                      ('2023/2024', '2022/2023', '2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
+                      ('2025/2026', '2024/2025', '2023/2024', '2022/2023', '2021/2022', '2020/2021', '2019/2020', '2018/2019', '2017/2018', '2016/2017'),
                       0,
                       help='Select the season from which the player\'s stats should be displayed.')
 
